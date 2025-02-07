@@ -1,0 +1,7 @@
+.dockerignore
+dockerfile
+.git/
+.gitignore
+env/
+README.md
+.flake8
