@@ -1,0 +1,6 @@
+[
+    {
+        "param_name": "BASE_IMAGE",
+        "is_required": true 
+    }
+]
