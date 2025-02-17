@@ -1,4 +1,4 @@
-import os_image_prepper
-import settings
+from os_image_prepper import run
 
-parameters = os_image_prepper.get_params(settings.PARAMS_PATH)
+if __name__ == '__main__':
+    run()
