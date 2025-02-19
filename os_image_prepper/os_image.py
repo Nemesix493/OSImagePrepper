@@ -272,6 +272,7 @@ class OSImage:
 
     def extend_root_fs(self):
         self.map_partitions()
+        self.unmount_image_partitions()
         logger.info(f"🔄 Extending root filesystem from {self.path}")
         try:
             e2fsck = subprocess.run(["e2fsck", "-f", self.root_partition], check=True, text=True).stdout
