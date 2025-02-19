@@ -3,6 +3,7 @@ from os import mkdir
 from pathlib import Path
 import subprocess
 import time
+import yaml
 
 
 logger = getLogger("GlobalLogger")
@@ -32,6 +33,8 @@ class OSImage:
         self._root_partition = None
         self._root_mount_dir = Path("/mnt/image_bind")
         self._boot_mount_dir = self._root_mount_dir / "boot"
+        self._mount_packages_dir = self._root_mount_dir / "packages"
+        self._image_packages_dir = Path("/packages")
 
     # Define properties
 
@@ -289,3 +292,49 @@ class OSImage:
         self.extend_image(size_mo)
         self.extend_root_partition()
         self.extend_root_fs()
+
+    def install_package_script(self, package_path: Path):
+        self.bind_system_dirs()
+        package_name = package_path.name
+        install_script_path = package_path / "install.sh"
+        logger.info(f"🔄 Installing {package_name} from script")
+        try:
+            install_script = subprocess.run(
+                ["chroot", self._root_mount_dir, "/bin/bash", "-c", install_script_path],
+                check=True,
+                text=True
+            ).stdout
+            logger.debug(f"chroot {self._root_mount_dir} /bin/bash -c {install_script_path} -> {install_script}")
+            logger.info(f"✅ {package_name} successfully installed !")
+        except subprocess.CalledProcessError as e:
+            self.unmount()
+            logger.error(f"❌ Installing {package_name} from script failed due to this error :\n {e}")
+            exit(1)
+
+    def add_space_packages_from_script(self, packages_dir: Path):
+        info_file_path = packages_dir / "info.yaml"
+        try:
+            with open(info_file_path, "r", encoding="utf-8") as info_file:
+                self.add_root_space(
+                    int(yaml.safe_load(info_file).get("space_needed", 0))
+                )
+        except Exception as e:
+            logger.error(
+                f"❌ Can't found space needed for packages from scripts (no space added) due to this error :\n {e}"
+            )
+
+    def install_packages_from_scripts(self, packages_dir: Path):
+        if not packages_dir.is_dir():
+            value_error = ValueError(f"\"{packages_dir}\" is not a directory !")
+            logger.error(f"❌ Can't install packages from scripts due to this error :\n {value_error}")
+            self.unmount()
+            raise value_error
+        self.add_space_packages_from_script(packages_dir)
+        self.bind_system_dirs()
+        # Binding package dir in image file system
+        self.mount_bind_directory(packages_dir, self._mount_packages_dir)
+        for package in packages_dir.iterdir():
+            self.install_package_script(
+                self._image_packages_dir / package.name
+            )
+        self.unmount_device_or_directory(self._mount_packages_dir)
