@@ -52,3 +52,7 @@ FINAL_IMAGE_DIR = DATA_DIR / f"{datetime_now.strftime('%Y-%m-%d')}{FINAL_IMAGE_N
 FINAL_IMAGE_PATH = FINAL_IMAGE_DIR / f"{datetime_now.strftime('%Y-%m-%d')}{FINAL_IMAGE_NAME}.img"
 
 KEEP_BASE_IMAGE = bool(os.getenv('KEEP_BASE_IMAGE', 1))
+
+PACKAGES_DIR = os.getenv('PACKAGES_DIR', "packages")
+
+PACKAGES_PATH = DATA_DIR / PACKAGES_DIR
