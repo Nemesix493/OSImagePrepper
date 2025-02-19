@@ -114,6 +114,43 @@ class OSImage:
                 logger.error(f"❌ Unmapping partitions from {self.path} failed due to this error :\n {e}")
                 exit(1)
 
+    def mount_device(self, device_path: Path, into_path: Path, catch_exception: bool = True):
+        logger.info(f"🔄 Mounting {device_path} into {into_path}")
+        try:
+            mount_bind = subprocess.run(
+                ["mount", device_path, into_path],
+                check=True,
+                text=True
+            ).stdout
+            logger.debug(f"mount {device_path} {into_path} -> {mount_bind}")
+            logger.info(f"✅ {device_path} successfully mounted into {into_path} !")
+        except subprocess.CalledProcessError as e:
+            if catch_exception:
+                self.unmount()
+                logger.error(f"❌ Mounting {device_path} into {into_path} failed due to this error :\n {e}")
+                exit(1)
+            else:
+                logger.error(f"❌ Mounting {device_path} into {into_path} failed !")
+                raise e
+
+    def unmount_device_or_directory(self, mount_point: Path, catch_exception: bool = True):
+        logger.info(f"🔄 Unmounting {mount_point}")
+        try:
+            umount = subprocess.run(
+                ["umount", mount_point],
+                check=True,
+                text=True
+            ).stdout
+            logger.debug(f"umount {mount_point} -> {umount}")
+            logger.info(f"✅ {mount_point} successfully unmounted !")
+        except subprocess.CalledProcessError as e:
+            if catch_exception:
+                logger.error(f"❌ Unmounting {mount_point} failed due to this error :\n {e}")
+                exit(1)
+            else:
+                logger.error(f"❌ Unmounting {mount_point} failed !")
+                raise e
+
     def mount_image_partitions(self):
         if not self._is_partitions_mounted:
             self.map_partitions()
@@ -124,19 +161,9 @@ class OSImage:
             logger.info(f"🔄 Mounting image partitions from {self.path} into {self._root_mount_dir}")
             try:
                 # Mounting root partition
-                mount_root = subprocess.run(
-                    ["mount", self.root_partition, self._root_mount_dir],
-                    check=True,
-                    text=True
-                ).stdout
-                logger.debug(f"mount {self.root_partition} {self._root_mount_dir} -> {mount_root}")
+                self.mount_device(self.root_partition, self._root_mount_dir, False)
                 # Mounting boot partition
-                mount_boot = subprocess.run(
-                    ["mount", self.boot_partition, self._boot_mount_dir],
-                    check=True,
-                    text=True
-                ).stdout
-                logger.debug(f"mount {self.boot_partition} {self._boot_mount_dir} -> {mount_boot}")
+                self.mount_device(self.boot_partition, self._boot_mount_dir, False)
                 logger.info("✅ Image partitions successfully mounted !")
                 self._is_partitions_mounted = True
             except subprocess.CalledProcessError as e:
@@ -150,16 +177,33 @@ class OSImage:
             logger.info(f"🔄 Unmounting image partitions {self._root_mount_dir}")
             try:
                 # Unmounting boot partition
-                umount_boot = subprocess.run(["umount", self._boot_mount_dir], check=True, text=True).stdout
-                logger.debug(f"umount {self._boot_mount_dir} -> {umount_boot}")
+                self.unmount_device_or_directory(self._boot_mount_dir, False)
                 # Unmounting root partition
-                umount_root = subprocess.run(["umount", self._root_mount_dir], check=True, text=True).stdout
-                logger.debug(f"umount {self._root_mount_dir} -> {umount_root}")
+                self.unmount_device_or_directory(self._root_mount_dir, False)
                 self._is_partitions_mounted = False
                 logger.info("✅ Image partitions successfully unmounted !")
             except subprocess.CalledProcessError as e:
                 logger.error(f"❌ Unmounting image partitions from {self.path} failed due to this error :\n {e}")
                 exit(1)
+
+    def mount_bind_directory(self, from_path: Path, into_path: Path, catch_exception: bool = True):
+        logger.info(f"🔄 Binding {from_path} into {into_path}")
+        try:
+            mount_bind = subprocess.run(
+                ["mount", "--bind", from_path, into_path],
+                check=True,
+                text=True
+            ).stdout
+            logger.debug(f"mount --bind {from_path} {into_path} -> {mount_bind}")
+            logger.info(f"✅ {from_path} successfully bound into {into_path} !")
+        except subprocess.CalledProcessError as e:
+            if catch_exception:
+                self.unmount()
+                logger.error(f"❌ Binding {from_path} into {into_path} failed due to this error :\n {e}")
+                exit(1)
+            else:
+                logger.error(f"❌ Binding {from_path} into {into_path} failed !")
+                raise e
 
     def bind_system_dirs(self):
         if not self._is_system_dirs_bound:
@@ -170,12 +214,7 @@ class OSImage:
                 for system_dir in self.BIND_SYSTEM_DIRS:
                     system_dir_path = Path("/") / system_dir
                     system_dir_bind_path = self._root_mount_dir / system_dir
-                    mount_bind = subprocess.run(
-                        ["mount", "--bind", system_dir_path, system_dir_bind_path],
-                        check=True,
-                        text=True
-                    ).stdout
-                    logger.debug(f"mount --bind {system_dir_path} {system_dir_bind_path} -> {mount_bind}")
+                    self.mount_bind_directory(system_dir_path, system_dir_bind_path, False)
                 self._is_system_dirs_bound = True
                 logger.info("✅ System directories successfully bound !")
             except subprocess.CalledProcessError as e:
@@ -190,12 +229,7 @@ class OSImage:
                 # Unbinding system dirs
                 for system_dir in reversed(self.BIND_SYSTEM_DIRS):
                     system_dir_bind_path = self._root_mount_dir / system_dir
-                    umount_bind = subprocess.run(
-                        ["umount", system_dir_bind_path],
-                        check=True,
-                        text=True
-                    ).stdout
-                    logger.debug(f"umount {system_dir_bind_path} -> {umount_bind}")
+                    self.unmount_device_or_directory(system_dir_bind_path, False)
                 self._is_system_dirs_bound = False
                 logger.info("✅ System directories successfully unbound !")
             except subprocess.CalledProcessError as e:
