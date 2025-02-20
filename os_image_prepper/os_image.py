@@ -281,7 +281,7 @@ class OSImage:
         self.unmount_image_partitions()
         logger.info(f"🔄 Extending root filesystem from {self.path}")
         try:
-            e2fsck = subprocess.run(["e2fsck", "-f", self.root_partition], check=True, text=True).stdout
+            e2fsck = subprocess.run(["e2fsck", "-yf", self.root_partition], check=True, text=True).stdout
             logger.debug(f"e2fsck -f {self.root_partition} -> {e2fsck}")
             resize2fs = subprocess.run(["resize2fs", self.root_partition], check=True, text=True).stdout
             logger.debug(f"resize2fs {self.root_partition} -> {resize2fs}")
