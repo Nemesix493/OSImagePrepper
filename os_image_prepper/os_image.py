@@ -76,7 +76,7 @@ class OSImage:
             self.unmap_partitions()
             logger.info(f"🔄 Unounting : {self.path}")
             try:
-                losetup = subprocess.run(["losetup", "-d", self.path], check=True, text=True).stdout
+                losetup = subprocess.run(["losetup", "-d", self.loop_dev], check=True, text=True).stdout
                 logger.debug(f"losetup -d {self.path} -> {losetup}")
                 time.sleep(2)
                 self._is_mounted = False
