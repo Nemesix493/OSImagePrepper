@@ -332,11 +332,14 @@ class OSImage:
         self.add_space_packages_from_script(packages_dir)
         self.bind_system_dirs()
         # Binding package dir in image file system
+        if not self._mount_packages_dir.exists():
+            mkdir(self._mount_packages_dir)
         self.mount_bind_directory(packages_dir, self._mount_packages_dir)
         for package in packages_dir.iterdir():
-            self.install_package_script(
-                self._image_packages_dir / package.name
-            )
+            if package.is_dir():
+                self.install_package_script(
+                    self._image_packages_dir / package.name
+                )
         self.unmount_device_or_directory(self._mount_packages_dir)
 
     def customize_end_to_end(self, settings):
