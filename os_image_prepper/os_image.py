@@ -340,4 +340,5 @@ class OSImage:
         self.unmount_device_or_directory(self._mount_packages_dir)
 
     def customize_end_to_end(self, settings):
-        self.install_package_script(settings.PACKAGES_PATH)
+        self.install_packages_from_scripts(settings.PACKAGES_PATH)
+        self.unmount()
