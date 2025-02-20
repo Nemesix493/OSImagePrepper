@@ -60,7 +60,12 @@ class OSImage:
         if not self._is_mounted:
             logger.info(f"🔄 Mounting : {self.path}")
             try:
-                losetup = subprocess.run(["losetup", "-Pf", "--show", self.path], check=True, text=True).stdout
+                losetup = subprocess.run(
+                    ["losetup", "-Pf", "--show", self.path],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                ).stdout.strip()
                 logger.debug(f"losetup -Pf --show {self.path} -> {losetup}")
                 time.sleep(2)
                 self._is_mounted = True
