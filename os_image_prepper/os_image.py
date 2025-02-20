@@ -100,6 +100,7 @@ class OSImage:
                 logger.info("✅ Partitions successfully mapped !")
             except subprocess.CalledProcessError as e:
                 logger.error(f"❌ Mapping partitions from {self.path} failed due to this error :\n {e}")
+                self.unmount()
                 exit(1)
 
     def unmap_partitions(self):
@@ -130,8 +131,8 @@ class OSImage:
             logger.info(f"✅ {device_path} successfully mounted into {into_path} !")
         except subprocess.CalledProcessError as e:
             if catch_exception:
-                self.unmount()
                 logger.error(f"❌ Mounting {device_path} into {into_path} failed due to this error :\n {e}")
+                self.unmount()
                 exit(1)
             else:
                 logger.error(f"❌ Mounting {device_path} into {into_path} failed !")
@@ -171,8 +172,8 @@ class OSImage:
                 logger.info("✅ Image partitions successfully mounted !")
                 self._is_partitions_mounted = True
             except subprocess.CalledProcessError as e:
-                self.unmount()
                 logger.error(f"❌ Mounting image partitions from {self.path} failed due to this error :\n {e}")
+                self.unmount()
                 exit(1)
 
     def unmount_image_partitions(self):
@@ -202,8 +203,8 @@ class OSImage:
             logger.info(f"✅ {from_path} successfully bound into {into_path} !")
         except subprocess.CalledProcessError as e:
             if catch_exception:
-                self.unmount()
                 logger.error(f"❌ Binding {from_path} into {into_path} failed due to this error :\n {e}")
+                self.unmount()
                 exit(1)
             else:
                 logger.error(f"❌ Binding {from_path} into {into_path} failed !")
@@ -222,8 +223,8 @@ class OSImage:
                 self._is_system_dirs_bound = True
                 logger.info("✅ System directories successfully bound !")
             except subprocess.CalledProcessError as e:
-                self.unmount()
                 logger.error(f"❌ Binding system directories for {self.path} failed due to this error :\n {e}")
+                self.unmount()
                 exit(1)
 
     def unbind_system_dirs(self):
@@ -270,8 +271,8 @@ class OSImage:
             logger.debug(f"parted --script {self.loop_dev} resizepart 2 100% -> {parted}")
             logger.info("✅ root partition successfully extended")
         except subprocess.CalledProcessError as e:
-            self.unmount()
             logger.error(f"❌ root partition extention failed due to this error :\n {e}")
+            self.unmount()
             exit(1)
 
     def extend_root_fs(self):
@@ -285,8 +286,8 @@ class OSImage:
             logger.debug(f"resize2fs {self.root_partition} -> {resize2fs}")
             logger.info("✅ root filesystem successfully extended")
         except subprocess.CalledProcessError as e:
-            self.unmount()
             logger.error(f"❌ root filesystem extention failed due to this error :\n {e}")
+            self.unmount()
             exit(1)
 
     def add_root_space(self, size_mo: int):
@@ -308,8 +309,8 @@ class OSImage:
             logger.debug(f"chroot {self._root_mount_dir} /bin/bash -c {install_script_path} -> {install_script}")
             logger.info(f"✅ {package_name} successfully installed !")
         except subprocess.CalledProcessError as e:
-            self.unmount()
             logger.error(f"❌ Installing {package_name} from script failed due to this error :\n {e}")
+            self.unmount()
             exit(1)
 
     def add_space_packages_from_script(self, packages_dir: Path):
