@@ -45,10 +45,11 @@ def no_need_to_extract(input_file, output_file, keep_base_file):
 
 
 def extract_img_from_xz(input_file, output_file, keep_base_file):
-    logger.info(f"🔄 Extracting {input_file} into {input_file}")
+    logger.info(f"🔄 Extracting {input_file} into {output_file}")
     xz_args = "-dkc" if keep_base_file else "-dc"
     try:
-        subprocess.run(["xz", xz_args, input_file, ">", output_file], check=True)
+        with open(output_file, 'wb') as f:
+            subprocess.run(["xz", xz_args, input_file], stdout=f, check=True)
         logger.info(f"✅ {output_file} is extracted !")
     except subprocess.CalledProcessError as e:
         logger.error(f"❌ Extraction failed due to this error :\n {e}")
