@@ -247,12 +247,8 @@ class OSImage:
         self.unmount()
         logger.info(f"🔄 Adding {size_mo} Mo to : {self.path}")
         try:
-            dd = subprocess.run(
-                ["dd", "if=/dev/zero", "bs=1M", f"count={size_mo}", ">>", self.path],
-                check=True,
-                text=True
-            ).stdout
-            logger.debug(f"dd if=/dev/zero bs=1M count={size_mo} >> self.path -> {dd}")
+            with open(self.path, "ab") as f:
+                subprocess.run(["dd", "if=/dev/zero", "bs=1M", f"count={size_mo}"], stdout=f, check=True)
             logger.info(f"✅ {size_mo} Mo successfully added to : {self.path}")
         except subprocess.CalledProcessError as e:
             logger.error(f"❌ Adding {size_mo} Mo failed due to this error :\n {e}")
