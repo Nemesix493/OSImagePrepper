@@ -81,7 +81,12 @@ class OSImage:
             self.unmap_partitions()
             logger.info(f"🔄 Unounting : {self.path}")
             try:
-                losetup = subprocess.run(["losetup", "-d", self.loop_dev], check=True, text=True).stdout
+                losetup = subprocess.run(
+                    ["losetup", "-d", self.loop_dev],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                ).stdout.strip()
                 logger.debug(f"losetup -d {self.path} -> {losetup}")
                 time.sleep(2)
                 self._is_mounted = False
@@ -96,7 +101,12 @@ class OSImage:
             self.mount()
             logger.info(f"🔄 Mapping partitions from {self.path}")
             try:
-                kpartx = subprocess.run(["kpartx", "-av", self.loop_dev], check=True, text=True).stdout
+                kpartx = subprocess.run(
+                    ["kpartx", "-av", self.loop_dev],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                ).stdout.strip()
                 logger.debug(f"kpartx -av {self.loop_dev} -> {kpartx}")
                 time.sleep(2)
                 self._is_partitions_mapped = True
@@ -113,7 +123,12 @@ class OSImage:
             self.unmount_image_partitions()
             logger.info(f"🔄 Unmapping partitions from {self.path}")
             try:
-                kpartx = subprocess.run(["kpartx", "-d", self.loop_dev], check=True, text=True).stdout
+                kpartx = subprocess.run(
+                    ["kpartx", "-d", self.loop_dev],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                ).stdout.strip()
                 logger.debug(f"kpartx -d {self.loop_dev} -> {kpartx}")
                 time.sleep(2)
                 self._is_partitions_mapped = False
@@ -130,8 +145,9 @@ class OSImage:
             mount_bind = subprocess.run(
                 ["mount", device_path, into_path],
                 check=True,
-                text=True
-            ).stdout
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"mount {device_path} {into_path} -> {mount_bind}")
             logger.info(f"✅ {device_path} successfully mounted into {into_path} !")
         except subprocess.CalledProcessError as e:
@@ -149,8 +165,9 @@ class OSImage:
             umount = subprocess.run(
                 ["umount", mount_point],
                 check=True,
-                text=True
-            ).stdout
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"umount {mount_point} -> {umount}")
             logger.info(f"✅ {mount_point} successfully unmounted !")
         except subprocess.CalledProcessError as e:
@@ -202,8 +219,9 @@ class OSImage:
             mount_bind = subprocess.run(
                 ["mount", "--bind", from_path, into_path],
                 check=True,
-                text=True
-            ).stdout
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"mount --bind {from_path} {into_path} -> {mount_bind}")
             logger.info(f"✅ {from_path} successfully bound into {into_path} !")
         except subprocess.CalledProcessError as e:
@@ -267,8 +285,9 @@ class OSImage:
             parted = subprocess.run(
                 ["parted", "--script", self.loop_dev, "resizepart", "2", "100%"],
                 check=True,
-                text=True
-            ).stdout
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"parted --script {self.loop_dev} resizepart 2 100% -> {parted}")
             logger.info("✅ root partition successfully extended")
         except subprocess.CalledProcessError as e:
@@ -281,9 +300,19 @@ class OSImage:
         self.unmount_image_partitions()
         logger.info(f"🔄 Extending root filesystem from {self.path}")
         try:
-            e2fsck = subprocess.run(["e2fsck", "-yf", self.root_partition], check=True, text=True).stdout
+            e2fsck = subprocess.run(
+                ["e2fsck", "-yf", self.root_partition],
+                check=True,
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"e2fsck -f {self.root_partition} -> {e2fsck}")
-            resize2fs = subprocess.run(["resize2fs", self.root_partition], check=True, text=True).stdout
+            resize2fs = subprocess.run(
+                ["resize2fs", self.root_partition],
+                check=True,
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"resize2fs {self.root_partition} -> {resize2fs}")
             logger.info("✅ root filesystem successfully extended")
         except subprocess.CalledProcessError as e:
@@ -305,8 +334,9 @@ class OSImage:
             install_script = subprocess.run(
                 ["chroot", self._root_mount_dir, "/bin/bash", "-c", install_script_path],
                 check=True,
-                text=True
-            ).stdout
+                text=True,
+                capture_output=True
+            ).stdout.strip()
             logger.debug(f"chroot {self._root_mount_dir} /bin/bash -c {install_script_path} -> {install_script}")
             logger.info(f"✅ {package_name} successfully installed !")
         except subprocess.CalledProcessError as e:
