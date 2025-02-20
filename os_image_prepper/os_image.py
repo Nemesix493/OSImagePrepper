@@ -104,6 +104,7 @@ class OSImage:
 
     def unmap_partitions(self):
         if self._is_partitions_mapped:
+            self.unmount_image_partitions()
             logger.info(f"🔄 Unmapping partitions from {self.path}")
             try:
                 kpartx = subprocess.run(["kpartx", "-d", self.loop_dev], check=True, text=True).stdout
