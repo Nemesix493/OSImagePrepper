@@ -63,7 +63,7 @@ pipeline{
                     sh 'PushDockerHubOverview/env/bin/pip install -r PushDockerHubOverview/requirements.txt'
                 }
                 withCredentials([usernamePassword(credentialsId: 'DockerHubCreds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
-                    sh 'cd PushDockerHubOverview && /env/bin/python -m main -u $DOCKER_USER -r $IMAGE_NAME -t $DOCKER_PASS -f ./../README.md'
+                    sh 'cd PushDockerHubOverview/ && env/bin/python -m main -u $DOCKER_USER -r $IMAGE_NAME -t $DOCKER_PASS -f ./../README.md'
                 }
             }
         }
